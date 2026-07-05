@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La Fogata</title>
-<style>html,body{margin:0;padding:0;background:#0d0805;min-height:100vh;}#R{width:100%;height:100vh;}</style>
+<style>html,body{margin:0;padding:0;background:#0d0805;min-height:100vh;}#R{width:100%;height:100vh;height:100dvh;}</style>
 </head>
 <body>
 
@@ -12,7 +12,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@400;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 body,#R{background:#0d0805;font-family:'Lato',sans-serif;}
-#R{position:relative;width:100%;height:720px;overflow:hidden;}
+#R{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;}
 .scr{position:absolute;inset:0;display:none;flex-direction:column;}
 .scr.on{display:flex;}
 :root{--g:#c9a227;--h:#f5d87e;--b:#d4a860;--m:#8a6030;--card:rgba(22,10,3,.88);--bd:rgba(201,162,39,.28);}
@@ -413,73 +413,42 @@ var ALL_MEMBERS=['Nicolás','Drako','Rufo','Camila','Fer','Blas','Mati'];
 // EL ORÁCULO — Avatar SVG personalizado del DM
 // Se renderiza a cualquier tamaño con dmSVG(w,h)
 // ══════════════════════════════════════════════
+// El Oráculo — función única, usada en TODOS los tamaños para garantizar consistencia
+var _oracIdSeq=0;
 function dmSVG(w,h,animated){
+  var id='orac'+(_oracIdSeq++);
   var a=animated?'style="animation:dmPulse 3s ease-in-out infinite alternate"':'';
   var ks=animated?'<style>@keyframes dmPulse{from{filter:drop-shadow(0 0 4px rgba(201,162,39,.6));}to{filter:drop-shadow(0 0 12px rgba(201,162,39,.95));}}</style>':'';
-  return ks+'<svg width="'+w+'" height="'+h+'" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" '+a+'>'
-  +'<defs>'
-  +'<radialGradient id="dmaura'+w+'" cx="50%" cy="68%" r="50%"><stop offset="0%" stop-color="#c9a227" stop-opacity="0.55"/><stop offset="100%" stop-color="#c9a227" stop-opacity="0"/></radialGradient>'
-  +'</defs>'
-  // Aura base
-  +'<ellipse cx="60" cy="108" rx="55" ry="26" fill="url(#dmaura'+w+')"/>'
-  // Cuerpo / ropa larga
-  +'<path d="M18 140 Q16 105 28 85 Q38 65 60 60 Q82 65 92 85 Q104 105 102 140Z" fill="#0f0700"/>'
-  // Textura diamantes en manto
-  +'<line x1="36" y1="95" x2="48" y2="82" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="48" y1="95" x2="60" y2="82" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="60" y1="95" x2="72" y2="82" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="72" y1="95" x2="84" y2="82" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="30" y1="110" x2="42" y2="97" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="42" y1="110" x2="54" y2="97" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="54" y1="110" x2="66" y2="97" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="66" y1="110" x2="78" y2="97" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  +'<line x1="78" y1="110" x2="90" y2="97" stroke="#c9a227" stroke-width="0.4" opacity="0.2"/>'
-  // Borde dorado del manto
-  +'<path d="M18 140 Q16 105 28 85 Q38 65 60 60 Q82 65 92 85 Q104 105 102 140" fill="none" stroke="#c9a227" stroke-width="1.5" opacity="0.7"/>'
-  // Capucha grande
-  +'<path d="M24 84 Q22 46 60 18 Q98 46 96 84 Q82 68 60 66 Q38 68 24 84Z" fill="#0a0500"/>'
-  // Borde dorado capucha
-  +'<path d="M24 84 Q22 46 60 18 Q98 46 96 84" fill="none" stroke="#c9a227" stroke-width="2" opacity="0.85"/>'
-  // Interior oscuro capucha
-  +'<path d="M32 80 Q32 50 60 26 Q88 50 88 80 Q76 66 60 64 Q44 66 32 80Z" fill="#060200"/>'
-  // Sombra profunda del rostro
-  +'<ellipse cx="60" cy="72" rx="20" ry="16" fill="#030100"/>'
-  // Ojos dorados (el único rasgo visible)
-  +'<ellipse cx="52.5" cy="70" rx="5.5" ry="3.8" fill="#c9a227" opacity="0.95"/>'
-  +'<ellipse cx="67.5" cy="70" rx="5.5" ry="3.8" fill="#c9a227" opacity="0.95"/>'
-  +'<ellipse cx="52.5" cy="70" rx="3" ry="2.2" fill="#fff8d0"/>'
-  +'<ellipse cx="67.5" cy="70" rx="3" ry="2.2" fill="#fff8d0"/>'
-  // Brillos en ojos
-  +'<circle cx="51" cy="68.8" r="1" fill="#fff" opacity="0.9"/>'
-  +'<circle cx="66" cy="68.8" r="1" fill="#fff" opacity="0.9"/>'
-  // Sello místico de 6 puntas en el pecho
-  +'<path d="M60 95 L62 101.5 L68.5 98.5 L64.5 104 L70 108.5 L63 107 L62 114 L60 108 L58 114 L57 107 L50 108.5 L55.5 104 L51.5 98.5 L58 101.5Z" fill="#c9a227" opacity="0.18"/>'
-  +'<path d="M60 95 L62 101.5 L68.5 98.5 L64.5 104 L70 108.5 L63 107 L62 114 L60 108 L58 114 L57 107 L50 108.5 L55.5 104 L51.5 98.5 L58 101.5Z" fill="none" stroke="#c9a227" stroke-width="0.9" opacity="0.65"/>'
-  +'<circle cx="60" cy="104.5" r="2.2" fill="#c9a227" opacity="0.6"/>'
-  // Mangas
-  +'<path d="M18 140 Q14 120 20 108 Q26 100 32 105 Q28 115 26 140" fill="#0d0600" stroke="#c9a227" stroke-width="0.8" opacity="0.4"/>'
-  +'<path d="M102 140 Q106 120 100 108 Q94 100 88 105 Q92 115 94 140" fill="#0d0600" stroke="#c9a227" stroke-width="0.8" opacity="0.4"/>'
+  return ks+'<svg width="'+w+'" height="'+h+'" viewBox="0 0 120 130" xmlns="http://www.w3.org/2000/svg" '+a+'>'
+  +'<defs><radialGradient id="'+id+'" cx="50%" cy="72%" r="55%"><stop offset="0%" stop-color="#c9a227" stop-opacity="0.5"/><stop offset="100%" stop-color="#c9a227" stop-opacity="0"/></radialGradient></defs>'
+  // Aura dorada de fondo
+  +'<ellipse cx="60" cy="98" rx="52" ry="24" fill="url(#'+id+')"/>'
+  // Hombros / cuerpo — negro sólido puro
+  +'<path d="M16 130 Q14 96 27 78 Q38 63 60 60 Q82 63 93 78 Q106 96 104 130Z" fill="#050301"/>'
+  +'<path d="M16 130 Q14 96 27 78 Q38 63 60 60 Q82 63 93 78 Q106 96 104 130" fill="none" stroke="#c9a227" stroke-width="1.4" opacity="0.7"/>'
+  // Capucha — negro sólido puro
+  +'<path d="M22 82 Q20 42 60 14 Q100 42 98 82 Q84 65 60 63 Q36 65 22 82Z" fill="#050301"/>'
+  +'<path d="M22 82 Q20 42 60 14 Q100 42 98 82" fill="none" stroke="#c9a227" stroke-width="2" opacity="0.9"/>'
+  // Interior oscuro del rostro
+  +'<path d="M31 78 Q31 48 60 28 Q89 48 89 78 Q76 64 60 62 Q44 64 31 78Z" fill="#020100"/>'
+  +'<ellipse cx="60" cy="70" rx="19" ry="15" fill="#000"/>'
+  // Ojos dorados — el único rasgo visible
+  +'<ellipse cx="52.5" cy="68" rx="6" ry="4.2" fill="#c9a227"/>'
+  +'<ellipse cx="67.5" cy="68" rx="6" ry="4.2" fill="#c9a227"/>'
+  +'<ellipse cx="52.5" cy="68" rx="2.8" ry="2" fill="#fff8d0"/>'
+  +'<ellipse cx="67.5" cy="68" rx="2.8" ry="2" fill="#fff8d0"/>'
+  +'<circle cx="51" cy="66.8" r="1" fill="#fff"/>'
+  +'<circle cx="66" cy="66.8" r="1" fill="#fff"/>'
+  // Sello místico en el pecho — gold, visible pero no dominante
+  +'<path d="M60 92 L61.8 98 L67.8 95.2 L64.2 100.3 L69.3 104.5 L62.8 103.1 L61.8 109.6 L60 104 L58.2 109.6 L57.2 103.1 L50.7 104.5 L55.8 100.3 L52.2 95.2 L58.2 98Z" fill="#c9a227" opacity="0.55"/>'
+  +'<circle cx="60" cy="101" r="2" fill="#c9a227" opacity="0.8"/>'
+  // Mangas — negro sólido
+  +'<path d="M16 130 Q12 111 18 100 Q24 92 30 97 Q26 106 24 130" fill="#050301" stroke="#c9a227" stroke-width="0.9" opacity="0.5"/>'
+  +'<path d="M104 130 Q108 111 102 100 Q96 92 90 97 Q94 106 96 130" fill="#050301" stroke="#c9a227" stroke-width="0.9" opacity="0.5"/>'
   +'</svg>';
 }
-
-// Versión mini para el chat (solo capucha + ojos)
-function dmSVGMini(size){
-  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">'
-  +'<defs><radialGradient id="dmm'+size+'" cx="50%" cy="80%" r="50%"><stop offset="0%" stop-color="#c9a227" stop-opacity="0.5"/><stop offset="100%" stop-color="#c9a227" stop-opacity="0"/></radialGradient></defs>'
-  +'<ellipse cx="60" cy="100" rx="48" ry="20" fill="url(#dmm'+size+')" />'
-  +'<path d="M20 120 Q18 90 30 70 Q40 52 60 48 Q80 52 90 70 Q102 90 100 120Z" fill="#0f0700"/>'
-  +'<path d="M20 120 Q18 90 30 70 Q40 52 60 48 Q80 52 90 70 Q102 90 100 120" fill="none" stroke="#c9a227" stroke-width="1.2" opacity="0.6"/>'
-  +'<path d="M22 70 Q20 36 60 10 Q100 36 98 70 Q84 56 60 54 Q36 56 22 70Z" fill="#080400"/>'
-  +'<path d="M22 70 Q20 36 60 10 Q100 36 98 70" fill="none" stroke="#c9a227" stroke-width="1.8" opacity="0.85"/>'
-  +'<ellipse cx="60" cy="62" rx="22" ry="16" fill="#030100"/>'
-  +'<ellipse cx="51" cy="60" rx="6" ry="4" fill="#c9a227" opacity="0.95"/>'
-  +'<ellipse cx="69" cy="60" rx="6" ry="4" fill="#c9a227" opacity="0.95"/>'
-  +'<ellipse cx="51" cy="60" rx="3" ry="2.3" fill="#fff8d0"/>'
-  +'<ellipse cx="69" cy="60" rx="3" ry="2.3" fill="#fff8d0"/>'
-  +'<circle cx="49.5" cy="58.8" r="1.1" fill="#fff" opacity="0.9"/>'
-  +'<circle cx="67.5" cy="58.8" r="1.1" fill="#fff" opacity="0.9"/>'
-  +'</svg>';
-}
+// Alias — dmSVGMini ahora usa el MISMO diseño que dmSVG para consistencia total entre tamaños
+function dmSVGMini(size){return dmSVG(size,Math.round(size*130/120),false);}
 
 var AVS=['🧙','🧝','🧟','🧛','🧜','🧚','🦸','🦹','🧞','🧌','🐉','🦅','🦉','🐺','🦊','🐗','🦁','🐻','🦎','🦇','⚔️','🗡️','🏹','🔮','🧿','💎','🪄','💀','👑','⚜️','🔥','💧','🌿','⚡','🌙','❄️','🌪️','🌊','🌑','☀️','🎲','🃏','🎭','🎮','🕹️','🌸','🍄','🦋','🌈','🪐'];
 var PD=[
@@ -646,7 +615,7 @@ function rnHub(){
 
   // Avatar hub: El Oráculo animado para DM, emoji normal para miembros
   var hubAv=isAdm()
-    ? dmSVG(58,68,true)
+    ? dmSVG(60,65,true)
     : '<span style="font-size:44px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)) drop-shadow(0 0 16px rgba(255,160,0,.3))">'+u.emoji+'</span>';
 
   var dmBtn=isAdm()?'<button class="hp-act-btn btn-dm" onclick="goSec(\'paneldm\')">👑 Panel del DM</button>':'';
@@ -672,8 +641,12 @@ function oPM(nm){
 
   // Avatar grande en el modal: El Oráculo para DM, emoji para miembros
   var av=(nm===AN&&isAdm())
-    ? dmSVG(72,84,true)
+    ? dmSVG(72,78,true)
     : '<span style="font-size:56px;filter:drop-shadow(0 0 16px rgba(255,180,0,.45))">'+(user&&user.name===nm?user.emoji:(KAVS[nm]||'🧙'))+'</span>';
+
+  // Solo el DM puede eliminar el perfil de OTROS miembros (no el propio, ni a sí mismo)
+  var canDeleteProfile=isAdm()&&user&&user.name!==nm;
+  var delProfileBtn=canDeleteProfile?'<button class="mb" style="color:#ff8060;border-color:rgba(200,48,26,.35)" onclick="confirmDeleteProfile(\''+nm+'\')">🗑 Eliminar perfil</button>':'';
 
   document.getElementById('pmodc').innerHTML=
     '<div class="pmh"><div class="pmav">'+av+'</div>'
@@ -687,8 +660,22 @@ function oPM(nm){
     +(lo.length?'<div class="pmlt">🏆 Logros de '+nm+'</div><div class="pmls">'+lo.map(function(l){return'<span class="pml">'+l.ic+' '+l.titulo+'</span>';}).join('')+'</div>'
       :'<div style="font-size:13px;color:var(--m);text-align:center;padding:.5rem 0">Aún no tiene logros.</div>')
     +'<div class="ma" style="margin-top:1rem">'+(user&&user.name===nm?'<button class="mb" style="color:#ff8060;border-color:rgba(200,48,26,.3)" onclick="cM(\'m-prof\');doLogout()">↩ Cerrar sesión</button>':'')
+    +delProfileBtn
     +'<button class="mb p" onclick="cM(\'m-prof\')">Cerrar perfil</button></div>';
   oM('m-prof');
+}
+
+// Eliminar perfil — SOLO el Dungeon Master puede hacerlo, y nunca sobre sí mismo
+function confirmDeleteProfile(nm){
+  if(!isAdm()){toast('Solo el Dungeon Master puede eliminar perfiles.');return;}
+  if(user&&user.name===nm){toast('No podés eliminar tu propio perfil de DM.');return;}
+  if(!confirm('¿Eliminar permanentemente el perfil de '+nm+'? Esta acción no se puede deshacer.'))return;
+  try{
+    var key='fg_u_'+nm.toLowerCase().replace(/\s+/g,'_');
+    window.storage.delete(key).catch(function(){});
+  }catch(e){}
+  cM('m-prof');
+  toast('Perfil de '+nm+' eliminado. Deberá registrarse de nuevo.');
 }
 
 function rnTablon(){var h='<div class="shb"><div class="sht">📋 El Tablón de Anuncios</div><div class="shr">'+bkB()+'<button class="pb" onclick="oM(\'m-tab\')">✦ Nueva convocatoria</button></div></div>';if(!anuncios.length)h+='<div class="em">El tablón está vacío.</div>';else h+=anuncios.map(function(a){var ya=a.aps.indexOf(user?user.name:'')>=0;var cls='ac'+(a.urg==='urgente'?' urg':'')+(a.done?' done':'');var b=a.done?'<span class="abg bd">✓ Completado</span>':a.urg==='urgente'?'<span class="abg bu">⚔ Urgente</span>':'<span class="abg bn">📋 Convocatoria</span>';var bg=a.done?GR.done:a.urg==='urgente'?GR.urg:GR.nor;return'<div class="'+cls+'" style="position:relative"><div class="abi" style="background:'+bg+'">'+(a.urg==='urgente'?'⚔️':a.done?'✅':'📋')+'</div><div class="at"><div class="atl">'+a.titulo+'</div>'+b+'</div><div class="ad">'+a.desc+'</div><div class="am"><span>📅 '+a.fecha+'</span><span>👥 '+a.aps.length+' apuntados</span><span style="cursor:pointer" onclick="oPM(\''+a.cr+'\')">por '+a.cr+'</span></div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">'+a.aps.map(function(n){return'<span class="ap" onclick="oPM(\''+n+'\')">'+n+'</span>';}).join('')+'</div><div class="aa"><button class="abt p" onclick="apA('+a.id+')">'+(ya?'✕ Desapuntarme':'⚔ Apuntarme')+'</button><button class="abt" onclick="togD('+a.id+')">'+(a.done?'Reabrir':'Completado')+'</button>'+(canDel(a.cr)?'<button class="abt d" onclick="delA('+a.id+')" style="margin-left:auto">🗑</button>':'')+'</div></div>';}).join('');sPC(h);}
@@ -769,7 +756,7 @@ function rnPanelDM(){
   var recentMed=media.slice(0,3).map(function(m){return'<div class="dm-content-row"><span class="dm-content-em">'+m.em+'</span><div class="dm-content-info"><div class="dm-content-tt">'+m.titulo+'</div><div class="dm-content-meta">por '+m.autor+'</div></div><button class="dm-content-del" onclick="dMed('+m.id+');rnPanelDM()">🗑 Borrar</button></div>';}).join('')||'<div class="dm-empty-mini">Sin recomendaciones.</div>';
   // Banner con El Oráculo destacado
   sPC('<div class="shb"><div class="sht">👑 Panel del Dungeon Master</div><div class="shr">'+bkB()+'</div></div>'
-    +'<div class="dm-banner" style="display:flex;align-items:center;justify-content:center;gap:12px">'+dmSVG(36,42,true)+'<span>Sección secreta — solo visible para el Dungeon Master de la hermandad</span></div>'
+    +'<div class="dm-banner" style="display:flex;align-items:center;justify-content:center;gap:12px">'+dmSVG(36,39,true)+'<span>Sección secreta — solo visible para el Dungeon Master de la hermandad</span></div>'
     +'<div class="dm-sec-ttl">📊 Estado general de la hermandad</div>'
     +statsHtml
     +'<div class="dm-sec-ttl">👥 Actividad por miembro</div>'
