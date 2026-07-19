@@ -420,9 +420,8 @@ const ATLAS={
   wallBase:{sx:16,sy:0,w:16,h:16}, // variante de pared cuando el vecino de abajo es piso (Fase A1)
   floor:{sx:32,sy:0,w:16,h:16},
   floor2:{sx:48,sy:0,w:16,h:16}, // variante de piso (agrietado) para romper la repetición (Fase A1)
-  floor3:{sx:64,sy:0,w:16,h:16}, // variante de piso (musgo verde) — 3ra variante, pulido posterior
-  torch:{sx:80,sy:0,w:16,h:16,frames:4}, // frames contiguos en horizontal, 16px cada uno — CORREGIDO 2 veces (ver Biblia)
-  chest:{sx:144,sy:0,w:16,h:16},
+  torch:{sx:64,sy:0,w:16,h:16,frames:4}, // frames contiguos en horizontal, 16px cada uno — CORREGIDO 2 veces (ver Biblia)
+  chest:{sx:128,sy:0,w:16,h:16},
 };
 let pilotAtlasImg=null,pilotAtlasLoaded=false,pilotAtlasFailed=false;
 // Default ON en piso 1 (Enmienda 1) — el toggle del panel DEV es el kill-switch de
@@ -4325,15 +4324,31 @@ function drawAmbientTorches(fl,camX,camY){
       // por animT, no por un timer aparte — con una fase por posición para que no todas
       // las antorchas del piso parpadeen sincronizadas.
       CX.globalAlpha=vis?1:0.25;
-      // El pack no trae la antorcha CON soporte en un solo sprite (la llama sola se leía
-      // como "mancha de fuego flotando" — feedback del Director) — se agrega un soporte
-      // oscuro simple, vectorial, ANTES de la llama raster, para que se lea como antorcha
-      // montada en la pared. Híbrido deliberado: pieza real del pack + 4 líneas de más.
       const bx=vx*TL+TL/2,by=vy*TL+TL/2;
-      CX.fillStyle='#1a1008';CX.fillRect(bx-1.5,by+6,3,7);
-      CX.fillStyle='#2a1c10';CX.fillRect(bx-3,by+11,6,3);
+      // Pulido (jul 2026, 2do pase — feedback del Director: "hace falta una pared detrás
+      // para que la antorcha pueda sostenerse", la pieza sola se perdía contra la textura
+      // de piedra). Tres capas nuevas: (1) brillo cálido pulsante detrás, para que la
+      // antorcha se despegue del muro en vez de mezclarse con él; (2) un soporte de hierro
+      // más elaborado (vara + copa, no solo 2 rectángulos); (3) la llama del pack dibujada
+      // 1.6× más grande que su tamaño nativo, con drawImage directo (no drawAtlasTile, que
+      // fija el destino a TL×TL) — a esta escala nativa la llama quedaba demasiado chica
+      // para leerse como antorcha real.
+      const glowPulse=0.5+0.5*Math.sin(animT*6+t.x*2+t.y);
+      const glow=CX.createRadialGradient(bx,by-3,1,bx,by-3,15);
+      glow.addColorStop(0,`rgba(255,150,60,${0.32+0.15*glowPulse})`);
+      glow.addColorStop(1,'rgba(255,150,60,0)');
+      CX.fillStyle=glow;CX.fillRect(bx-16,by-20,32,32);
+      CX.fillStyle='#0f0a06';CX.fillRect(bx-1,by+2,2,9); // vara de hierro
+      CX.fillStyle='#1a120a';CX.fillRect(bx-4,by+8,8,3); // copa donde se apoya la llama
+      CX.strokeStyle='#3a281a';CX.lineWidth=1;CX.strokeRect(bx-4,by+8,8,3);
       const frame=Math.floor(animT*8+t.x*1.7+t.y*0.9)%ATLAS.torch.frames;
-      drawAtlasTile(ATLAS.torch,vx*TL,vy*TL,frame);
+      // El multiplicador va sobre TL (tamaño real de render, 32px) — no sobre el tamaño de
+      // la pieza fuente (16px). Aplicarlo sobre la fuente daba una llama de 25.6px, más
+      // CHICA que el render normal de 32px (justo al revés de lo buscado) — bug propio,
+      // encontrado por el test dedicado antes de llegar al Director.
+      const scale=1.5,fw=TL*scale,fh=TL*scale;
+      const fx=ATLAS.torch.sx+frame*ATLAS.torch.w;
+      CX.drawImage(pilotAtlasImg,fx,ATLAS.torch.sy,ATLAS.torch.w,ATLAS.torch.h,Math.round(bx-fw/2),Math.round(by+7-fh),Math.round(fw),Math.round(fh));
       CX.globalAlpha=1;
       return;
     }
@@ -4472,12 +4487,14 @@ function drawTile(sx,sy,cell,fl,mx,my){
   }
   else if(cell.t===T.FLOOR){
     if(rasterReady()){
-      // Variedad de piso (Fase A1, pulido): 3 variantes seedeadas por posición (no por azar
-      // en cada frame — la MISMA celda siempre da la MISMA variante, si no titilaría entre
-      // redibujados): ~20% agrietado, ~20% musgo, resto liso.
+      // Variedad de piso: 2 variantes seedeadas por posición (no por azar en cada frame —
+      // la MISMA celda siempre da la MISMA variante, si no titilaría entre redibujados).
+      // NOTA: la 3ra variante ("floor3") resultó ser un tile de AGUA del pack, no musgo —
+      // el Director la sacó de acá a propósito: el agua se reserva para cuando se arme
+      // como elemento propio (en movimiento), no como variación estática de piso normal.
       const hasCtx=fl&&mx!=null;
       const seed=hasCtx?(mx*7+my*13)%10:9;
-      const variant=seed<2?ATLAS.floor3:seed<4?ATLAS.floor2:ATLAS.floor;
+      const variant=seed<3?ATLAS.floor2:ATLAS.floor;
       drawAtlasTile(variant,sx,sy,0,currentZone().floor);
       return;
     }
