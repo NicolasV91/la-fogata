@@ -420,8 +420,9 @@ const ATLAS={
   wallBase:{sx:16,sy:0,w:16,h:16}, // variante de pared cuando el vecino de abajo es piso (Fase A1)
   floor:{sx:32,sy:0,w:16,h:16},
   floor2:{sx:48,sy:0,w:16,h:16}, // variante de piso (agrietado) para romper la repetición (Fase A1)
-  torch:{sx:64,sy:0,w:16,h:16,frames:4}, // frames contiguos en horizontal, 16px cada uno
-  chest:{sx:128,sy:0,w:16,h:16},
+  floor3:{sx:64,sy:0,w:16,h:16}, // variante de piso (musgo verde) — 3ra variante, pulido posterior
+  torch:{sx:80,sy:0,w:16,h:16,frames:4}, // frames contiguos en horizontal, 16px cada uno — CORREGIDO 2 veces (ver Biblia)
+  chest:{sx:144,sy:0,w:16,h:16},
 };
 let pilotAtlasImg=null,pilotAtlasLoaded=false,pilotAtlasFailed=false;
 // Default ON en piso 1 (Enmienda 1) — el toggle del panel DEV es el kill-switch de
@@ -4324,6 +4325,13 @@ function drawAmbientTorches(fl,camX,camY){
       // por animT, no por un timer aparte — con una fase por posición para que no todas
       // las antorchas del piso parpadeen sincronizadas.
       CX.globalAlpha=vis?1:0.25;
+      // El pack no trae la antorcha CON soporte en un solo sprite (la llama sola se leía
+      // como "mancha de fuego flotando" — feedback del Director) — se agrega un soporte
+      // oscuro simple, vectorial, ANTES de la llama raster, para que se lea como antorcha
+      // montada en la pared. Híbrido deliberado: pieza real del pack + 4 líneas de más.
+      const bx=vx*TL+TL/2,by=vy*TL+TL/2;
+      CX.fillStyle='#1a1008';CX.fillRect(bx-1.5,by+6,3,7);
+      CX.fillStyle='#2a1c10';CX.fillRect(bx-3,by+11,6,3);
       const frame=Math.floor(animT*8+t.x*1.7+t.y*0.9)%ATLAS.torch.frames;
       drawAtlasTile(ATLAS.torch,vx*TL,vy*TL,frame);
       CX.globalAlpha=1;
@@ -4464,11 +4472,12 @@ function drawTile(sx,sy,cell,fl,mx,my){
   }
   else if(cell.t===T.FLOOR){
     if(rasterReady()){
-      // Variedad de piso (Fase A1): 2 variantes alternadas por posición (no por azar en cada
-      // frame — seedeado en mx,my para que la MISMA celda siempre muestre la MISMA variante,
-      // si no titilaría entre redibujados). ~30% variante agrietada, para que se note sin
-      // volverse el patrón dominante.
-      const variant=fl&&mx!=null&&((mx*7+my*13)%10)<3?ATLAS.floor2:ATLAS.floor;
+      // Variedad de piso (Fase A1, pulido): 3 variantes seedeadas por posición (no por azar
+      // en cada frame — la MISMA celda siempre da la MISMA variante, si no titilaría entre
+      // redibujados): ~20% agrietado, ~20% musgo, resto liso.
+      const hasCtx=fl&&mx!=null;
+      const seed=hasCtx?(mx*7+my*13)%10:9;
+      const variant=seed<2?ATLAS.floor3:seed<4?ATLAS.floor2:ATLAS.floor;
       drawAtlasTile(variant,sx,sy,0,currentZone().floor);
       return;
     }
