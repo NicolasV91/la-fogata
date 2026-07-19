@@ -4543,10 +4543,10 @@ function drawTile(sx,sy,cell,fl,mx,my){
     // Pulsing floor fill
     const p2=0.55+0.45*Math.sin(animT*2.2);
     if(rasterReady()){
+      // Sin overlay encima esta vez — el pulso violeta (35% de opacidad en su pico) tapaba
+      // el pixel art real, dejando ver un bloque de color en vez de la pieza — feedback
+      // directo del Director. Primero confirmar que la pieza sola se vea bien.
       drawAtlasTile(ATLAS.stairsDown,sx,sy);
-      // Se conserva el pulso violeta como capa liviana ENCIMA — para no perder la señal
-      // visual de "esto es interactivo/especial" que ya cumplía bien en vectorial.
-      CX.fillStyle=`rgba(70,40,160,${p2*0.35})`;CX.fillRect(sx,sy,TL,TL);
       return;
     }
     CX.fillStyle=th.floor;CX.fillRect(sx,sy,TL,TL);
@@ -4659,7 +4659,6 @@ function drawTile(sx,sy,cell,fl,mx,my){
     const p3=0.55+0.45*Math.sin(animT*2.2);
     if(rasterReady()){
       drawAtlasTile(ATLAS.stairsUp,sx,sy);
-      CX.fillStyle=`rgba(40,140,70,${p3*0.35})`;CX.fillRect(sx,sy,TL,TL);
       return;
     }
     CX.fillStyle=th.floor;CX.fillRect(sx,sy,TL,TL);
