@@ -4737,9 +4737,18 @@ function drawTile(sx,sy,cell,fl,mx,my){
   }else if(cell.t===T.SECRET){
     if(!cell.revealed){
       // Sin tell visual — pixel por pixel IGUAL que una pared normal (spec: el tell es
-      // por mensaje, nunca por un detalle distinto en el render).
+      // por mensaje, nunca por un detalle distinto en el render). En raster, eso significa
+      // usar EXACTAMENTE la misma pieza/autotiling que una pared común — antes se había
+      // quedado sin rama raster, mostrando un relleno plano en medio de paredes texturizadas,
+      // lo cual short-circuitea el propio "sin tell visual" (destacaba por ser distinta).
+      if(rasterReady()){
+        const southIsFloor=fl&&mx!=null&&fl.cells[my+1]?.[mx]?.t===T.FLOOR;
+        drawAtlasTile(southIsFloor?ATLAS.wallBase:ATLAS.wall,sx,sy,0,currentZone().wall);
+        return;
+      }
       CX.fillStyle=th.wall;CX.fillRect(sx,sy,TL,TL);CX.fillStyle=th.accent;CX.fillRect(sx+1,sy+1,TL-2,2);CX.fillRect(sx+TL-3,sy+3,2,TL-5);
     }else{
+      if(rasterReady()){drawAtlasTile(ATLAS.floor,sx,sy,0,currentZone().floor);return;} // revelada: piso raster (el pack no trae un arco de piedra propio todavía)
       // Revelada — puerta de piedra, arco angosto, distinta de una GOLDDOOR (sin oro/brillo)
       CX.fillStyle=th.floor;CX.fillRect(sx,sy,TL,TL);
       CX.fillStyle=th.wall;CX.fillRect(sx+3,sy,TL-6,TL);
