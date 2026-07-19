@@ -4325,14 +4325,11 @@ function drawAmbientTorches(fl,camX,camY){
       // las antorchas del piso parpadeen sincronizadas.
       CX.globalAlpha=vis?1:0.25;
       const bx=vx*TL+TL/2,by=vy*TL+TL/2;
-      // Pulido (jul 2026, 2do pase — feedback del Director: "hace falta una pared detrás
-      // para que la antorcha pueda sostenerse", la pieza sola se perdía contra la textura
-      // de piedra). Tres capas nuevas: (1) brillo cálido pulsante detrás, para que la
-      // antorcha se despegue del muro en vez de mezclarse con él; (2) un soporte de hierro
-      // más elaborado (vara + copa, no solo 2 rectángulos); (3) la llama del pack dibujada
-      // 1.6× más grande que su tamaño nativo, con drawImage directo (no drawAtlasTile, que
-      // fija el destino a TL×TL) — a esta escala nativa la llama quedaba demasiado chica
-      // para leerse como antorcha real.
+      // Pulido (jul 2026, 3er pase — feedback del Director: agrandar la llama a 1.5x TL la
+      // hizo ver PEOR, no mejor. A esa escala cada pixel del sprite de 16px se vuelve un
+      // bloque de ~4.5px de lado, perdiendo cualquier detalle — "reducir los pixeles a
+      // 16x16" fue el pedido explícito. Vuelta a la escala estándar (TL, la misma que usan
+      // pared/piso/cofre) — la mejora queda en el brillo + soporte, no en inflar el sprite.
       const glowPulse=0.5+0.5*Math.sin(animT*6+t.x*2+t.y);
       const glow=CX.createRadialGradient(bx,by-3,1,bx,by-3,15);
       glow.addColorStop(0,`rgba(255,150,60,${0.32+0.15*glowPulse})`);
@@ -4342,13 +4339,7 @@ function drawAmbientTorches(fl,camX,camY){
       CX.fillStyle='#1a120a';CX.fillRect(bx-4,by+8,8,3); // copa donde se apoya la llama
       CX.strokeStyle='#3a281a';CX.lineWidth=1;CX.strokeRect(bx-4,by+8,8,3);
       const frame=Math.floor(animT*8+t.x*1.7+t.y*0.9)%ATLAS.torch.frames;
-      // El multiplicador va sobre TL (tamaño real de render, 32px) — no sobre el tamaño de
-      // la pieza fuente (16px). Aplicarlo sobre la fuente daba una llama de 25.6px, más
-      // CHICA que el render normal de 32px (justo al revés de lo buscado) — bug propio,
-      // encontrado por el test dedicado antes de llegar al Director.
-      const scale=1.5,fw=TL*scale,fh=TL*scale;
-      const fx=ATLAS.torch.sx+frame*ATLAS.torch.w;
-      CX.drawImage(pilotAtlasImg,fx,ATLAS.torch.sy,ATLAS.torch.w,ATLAS.torch.h,Math.round(bx-fw/2),Math.round(by+7-fh),Math.round(fw),Math.round(fh));
+      drawAtlasTile(ATLAS.torch,vx*TL,vy*TL,frame);
       CX.globalAlpha=1;
       return;
     }
