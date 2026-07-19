@@ -417,9 +417,11 @@ const CW=720,CH=480,TL=32,VW=14,VH=15,PX=VW*TL,FOV=6,NF=26;
 // escalado entero queda nítido, sin remuestreo.
 const ATLAS={
   wall:{sx:0,sy:0,w:16,h:16},
-  floor:{sx:16,sy:0,w:16,h:16},
-  torch:{sx:32,sy:0,w:16,h:16,frames:4}, // frames contiguos en horizontal, 16px cada uno
-  chest:{sx:96,sy:0,w:16,h:16},
+  wallBase:{sx:16,sy:0,w:16,h:16}, // variante de pared cuando el vecino de abajo es piso (Fase A1)
+  floor:{sx:32,sy:0,w:16,h:16},
+  floor2:{sx:48,sy:0,w:16,h:16}, // variante de piso (agrietado) para romper la repetición (Fase A1)
+  torch:{sx:64,sy:0,w:16,h:16,frames:4}, // frames contiguos en horizontal, 16px cada uno
+  chest:{sx:128,sy:0,w:16,h:16},
 };
 let pilotAtlasImg=null,pilotAtlasLoaded=false,pilotAtlasFailed=false;
 // Default ON en piso 1 (Enmienda 1) — el toggle del panel DEV es el kill-switch de
@@ -456,11 +458,38 @@ loadAtlases();
 // Dibuja una pieza del atlas en la celda de destino (sx,sy en coordenadas de pantalla,
 // ya multiplicadas por TL) — coordenadas de destino SIEMPRE enteras (Math.round), remuestreo
 // fraccional emborrona pixel art aunque el smoothing esté apagado.
-function drawAtlasTile(piece,sx,sy,frame){
-  const fx=piece.sx+(frame||0)*piece.w;
-  CX.drawImage(pilotAtlasImg,fx,piece.sy,piece.w,piece.h,Math.round(sx),Math.round(sy),TL,TL);
+// Fase A1: tintColor opcional — aplica el color de la ZONA actual (mismos hex que ya usa
+// el tema vectorial) sobre la pieza, para que la progresión de profundidad no se pierda
+// solo porque el tile de fondo sea siempre el mismo. Cacheado por pieza+color: el tinte
+// se calcula UNA vez por combinación, no en cada frame (drawImage desde el caché es barato).
+const tintedTileCache={};
+function getTintedTile(fx,fy,w,h,tintColor){
+  const key=fx+'_'+fy+'_'+tintColor;
+  if(tintedTileCache[key])return tintedTileCache[key];
+  const off=document.createElement('canvas');
+  off.width=w;off.height=h;
+  const octx=off.getContext('2d');
+  octx.imageSmoothingEnabled=false;
+  octx.drawImage(pilotAtlasImg,fx,fy,w,h,0,0,w,h);
+  octx.globalCompositeOperation='multiply';
+  octx.fillStyle=tintColor;
+  octx.fillRect(0,0,w,h);
+  // 'multiply' puede "pintar" fuera de la silueta real en piezas con transparencia parcial
+  // (antorcha/cofre) — remascarar con el alpha original de la pieza para no ensuciar el borde.
+  octx.globalCompositeOperation='destination-in';
+  octx.drawImage(pilotAtlasImg,fx,fy,w,h,0,0,w,h);
+  tintedTileCache[key]=off;
+  return off;
 }
-function rasterReady(){return rasterMode&&cur===0&&pilotAtlasLoaded&&!!pilotAtlasImg;}
+function drawAtlasTile(piece,sx,sy,frame,tintColor){
+  const fx=piece.sx+(frame||0)*piece.w;
+  const src=tintColor?getTintedTile(fx,piece.sy,piece.w,piece.h,tintColor):pilotAtlasImg;
+  const sourceX=tintColor?0:fx,sourceY=tintColor?0:piece.sy;
+  CX.drawImage(src,sourceX,sourceY,piece.w,piece.h,Math.round(sx),Math.round(sy),TL,TL);
+}
+// Fase A1 (jul 2026): raster para TODA la mazmorra (26 pisos), no solo el piloto del
+// piso 1 — la superficie queda vectorial porque el pack no tiene equivalente (bosque/pasto).
+function rasterReady(){return rasterMode&&cur>=0&&cur<SURFACE&&pilotAtlasLoaded&&!!pilotAtlasImg;}
 
 // ══════════════════════════════════════════════════════════════════
 // CORE · CONSTANTES DE DISEÑO
@@ -4260,7 +4289,7 @@ function drawMap(){
     if(mx<0||mx>=fl.w||my<0||my>=fl.h){CX.fillStyle='#010100';CX.fillRect(sx,sy,TL,TL);continue;}
     const cell=fl.cells[my][mx];
     if(!cell.exp){CX.fillStyle='#010100';CX.fillRect(sx,sy,TL,TL);continue;}
-    CX.globalAlpha=cell.vis?1:(cell.inDarkRoom?0.14:0.28);drawTile(sx,sy,cell);CX.globalAlpha=1;
+    CX.globalAlpha=cell.vis?1:(cell.inDarkRoom?0.14:0.28);drawTile(sx,sy,cell,fl,mx,my);CX.globalAlpha=1;
   }
   drawAmbientTorches(fl,camX,camY);
   drawAmbientDust(camX,camY);
@@ -4401,15 +4430,32 @@ function chestPath(ccx,topY,midY,botY,seamHalfW,botHalfW){
   CX.lineTo(ccx-botHalfW,botY);
   CX.closePath();
 }
-function drawTile(sx,sy,cell){
+function drawTile(sx,sy,cell,fl,mx,my){
   const cx=sx+TL/2,cy=sy+TL/2;
   const th=floorTheme();
   if(cell.t===T.WALL){
-    if(rasterReady()){drawAtlasTile(ATLAS.wall,sx,sy);return;}
+    if(rasterReady()){
+      // Autotiling simple (Fase A1): si el vecino de ABAJO es piso, esta pared es el borde
+      // visible que da al piso — usa la variante con base/remate. Si no (interior o borde
+      // del mapa), pared plana de siempre. Un solo chequeo de vecino — "simple" a propósito,
+      // no el set completo de esquinas de 16 bits.
+      const southIsFloor=fl&&mx!=null&&fl.cells[my+1]?.[mx]?.t===T.FLOOR;
+      const piece=southIsFloor?ATLAS.wallBase:ATLAS.wall;
+      drawAtlasTile(piece,sx,sy,0,currentZone().wall);
+      return;
+    }
     CX.fillStyle=th.wall;CX.fillRect(sx,sy,TL,TL);CX.fillStyle=th.accent;CX.fillRect(sx+1,sy+1,TL-2,2);CX.fillRect(sx+TL-3,sy+3,2,TL-5);
   }
   else if(cell.t===T.FLOOR){
-    if(rasterReady()){drawAtlasTile(ATLAS.floor,sx,sy);return;}
+    if(rasterReady()){
+      // Variedad de piso (Fase A1): 2 variantes alternadas por posición (no por azar en cada
+      // frame — seedeado en mx,my para que la MISMA celda siempre muestre la MISMA variante,
+      // si no titilaría entre redibujados). ~30% variante agrietada, para que se note sin
+      // volverse el patrón dominante.
+      const variant=fl&&mx!=null&&((mx*7+my*13)%10)<3?ATLAS.floor2:ATLAS.floor;
+      drawAtlasTile(variant,sx,sy,0,currentZone().floor);
+      return;
+    }
     CX.fillStyle=th.floor;CX.fillRect(sx,sy,TL,TL);CX.fillStyle=th.accent;CX.fillRect(sx+4,sy+4,TL-8,TL-8);
   }
   else if(cell.t===T.CHEST){
